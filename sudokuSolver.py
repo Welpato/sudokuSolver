@@ -15,14 +15,10 @@ def total_empty(matrix):
 
 
 def return_if_pos_num(pos, number):
-    position = 0
-    number_position = False
-    while position < len(pos):
-        if pos[position] == number:
-            number_position = True
-            break
-        position = position + 1
-    return number_position
+    for position in pos:
+        if position == number:
+            return True
+    return False
 
 
 def return_column(matrix, column):
@@ -89,33 +85,33 @@ def return_area(matrix, area_number):
 
 
 def return_area_number(matrix, number):
-    position = 0
-    areas = np.zeros(9, dtype=object)
-    while position <= 8:
-        if not return_if_pos_num(return_area(matrix, position), number):
-            areas[position] = number
-        position = position + 1
-    return areas
+    def get_area(position):
+        return return_area(matrix, position)
+
+    return return_numbers(get_area, number)
 
 
 def return_lines_number(matrix, number):
-    position = 0
-    lines = np.zeros(9, dtype=object)
-    while position <= 8:
-        if not return_if_pos_num(matrix[position], number):
-            lines[position] = number
-        position = position + 1
-    return lines
+    def get_line(position):
+        return matrix[position]
+
+    return return_numbers(get_line, number)
 
 
 def return_numbers_column(matrix, number):
-    position = 0
-    columns = np.zeros(9, dtype=object)
-    while position <= 8:
-        if not return_if_pos_num(return_column(matrix, position), number):
-            columns[position] = number
-        position = position + 1
-    return columns
+    def get_column(position):
+        return matrix[:, position]
+
+    return return_numbers(get_column, number)
+
+
+def return_numbers(get_zone, number):
+    values = np.zeros(9, dtype=object)
+    for pos in range(0, 9):
+        if not return_if_pos_num(get_zone(pos), number):
+            values[pos] = number
+
+    return values
 
 
 # Dont know yet
@@ -199,6 +195,7 @@ def verify_hidden_line_number(matrix, matrix_prob):
 def verify_hidden_column_number(matrix, matrix_prob):
     column = 0
     execute_again = 0
+
     while column <= 8:
         column_matrix = return_column(matrix, column)
         column_prob = return_column(matrix_prob, column)
@@ -243,6 +240,7 @@ def verify_hidden_area_number(matrix, matrix_prob):
 def verify_hidden_number(area, area_prob):
     column = 0
     amount_number = np.zeros(9, dtype=int)
+
     while column <= 8:
         if area[column] == 0:
             counter = 0
