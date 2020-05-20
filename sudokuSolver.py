@@ -4,6 +4,18 @@ import copy
 
 import sys
 
+AREA_KEYS = {
+    0: [0, 3, 0, 3],
+    1: [0, 3, 3, 6],
+    2: [0, 3, 6, 9],
+    3: [3, 6, 0, 3],
+    4: [3, 6, 3, 6],
+    5: [3, 6, 6, 9],
+    6: [6, 9, 0, 3],
+    7: [6, 9, 3, 6],
+    8: [6, 9, 6, 9]
+}
+
 
 def total_empty(matrix):
     counter = 0
@@ -22,245 +34,132 @@ def return_if_pos_num(pos, number):
 
 
 def return_column(matrix, column):
-    return [row[column] for row in matrix]
-
-
-def return_line_column_area(number_area):
-    lines_columns = np.zeros(9, dtype=object)
-    lines_columns[0] = 0
-    lines_columns[1] = 1
-    lines_columns[2] = 2
-    lines_columns[3] = 0
-    lines_columns[4] = 1
-    lines_columns[5] = 2
-    if number_area == 1:
-        lines_columns[3] = 3
-        lines_columns[4] = 4
-        lines_columns[5] = 5
-    elif number_area == 2:
-        lines_columns[3] = 6
-        lines_columns[4] = 7
-        lines_columns[5] = 8
-    elif number_area == 3 or number_area == 4 or number_area == 5:
-        lines_columns[0] = 3
-        lines_columns[1] = 4
-        lines_columns[2] = 5
-        if number_area == 4:
-            lines_columns[3] = 3
-            lines_columns[4] = 4
-            lines_columns[5] = 5
-        elif number_area == 5:
-            lines_columns[3] = 6
-            lines_columns[4] = 7
-            lines_columns[5] = 8
-    elif number_area == 6 or number_area == 7 or number_area == 8:
-        lines_columns[0] = 6
-        lines_columns[1] = 7
-        lines_columns[2] = 8
-        if number_area == 7:
-            lines_columns[3] = 3
-            lines_columns[4] = 4
-            lines_columns[5] = 5
-        elif number_area == 8:
-            lines_columns[3] = 6
-            lines_columns[4] = 7
-            lines_columns[5] = 8
-    return lines_columns
+    return matrix[:, column]
 
 
 def return_area(matrix, area_number):
-    area_new = {
-        0: matrix[0:3, 0:3].flatten(),
-        1: matrix[0:3, 3:6].flatten(),
-        2: matrix[0:3, 6:9].flatten(),
-        3: matrix[3:6, 0:3].flatten(),
-        4: matrix[3:6, 3:6].flatten(),
-        5: matrix[3:6, 6:9].flatten(),
-        6: matrix[6:9, 0:3].flatten(),
-        7: matrix[6:9, 3:6].flatten(),
-        8: matrix[6:9, 6:9].flatten()
-    }
+    area_keys = AREA_KEYS.get(area_number)
 
-    return area_new.get(area_number, 'Invalid area!')
+    return matrix[area_keys[0]:area_keys[1], area_keys[2]:area_keys[3]].flatten()
 
 
 def return_area_number(matrix, number):
-    def get_area(position):
-        return return_area(matrix, position)
-
-    return return_numbers(get_area, number)
+    return return_numbers(return_area, matrix, number)
 
 
 def return_lines_number(matrix, number):
-    def get_line(position):
-        return matrix[position]
+    def get_line(sub_matrix, position):
+        return sub_matrix[position]
 
-    return return_numbers(get_line, number)
+    return return_numbers(get_line, matrix, number)
 
 
 def return_numbers_column(matrix, number):
-    def get_column(position):
-        return matrix[:, position]
-
-    return return_numbers(get_column, number)
+    return return_numbers(return_column, matrix, number)
 
 
-def return_numbers(get_zone, number):
+def return_numbers(get_zone, matrix, number):
     values = np.zeros(9, dtype=object)
     for pos in range(0, 9):
-        if not return_if_pos_num(get_zone(pos), number):
+        if not return_if_pos_num(get_zone(matrix, pos), number):
             values[pos] = number
 
     return values
 
 
-# Dont know yet
 def cross_number_area_line_column(matrix, number):
     areas = return_area_number(matrix, number)
     lines = return_lines_number(matrix, number)
     columns = return_numbers_column(matrix, number)
-    con = 0
     result_matrix = np.zeros((9, 9), dtype=object)
     result_matrix[0:9] = number
-    while con <= 8:
+
+    for con in range(0, 9):
         if lines[con] != number:
             result_matrix[con] = 0
         if columns[con] != number:
-            c = 0
-            while c < 9:
-                result_matrix[c][con] = 0
-                c = c + 1
+            result_matrix[:, con] = 0
         if areas[con] != number:
-            lines_columns = return_line_column_area(con)
-            result_matrix[lines_columns[0]][lines_columns[3]] = 0
-            result_matrix[lines_columns[0]][lines_columns[4]] = 0
-            result_matrix[lines_columns[0]][lines_columns[5]] = 0
-            result_matrix[lines_columns[1]][lines_columns[3]] = 0
-            result_matrix[lines_columns[1]][lines_columns[4]] = 0
-            result_matrix[lines_columns[1]][lines_columns[5]] = 0
-            result_matrix[lines_columns[2]][lines_columns[3]] = 0
-            result_matrix[lines_columns[2]][lines_columns[4]] = 0
-            result_matrix[lines_columns[2]][lines_columns[5]] = 0
-        con = con + 1
+            area_keys = AREA_KEYS.get(con)
+            result_matrix[area_keys[0]:area_keys[1], area_keys[2]:area_keys[3]] = 0
     return result_matrix
 
 
-# Dont know yet
 def all_number_position(matrix):
-    con = 0
     matrix_numbers = np.zeros(9, dtype=object)
-    while con <= 8:
+    for con in range(0, 9):
         matrix_numbers[con] = cross_number_area_line_column(matrix, con + 1)
-        con = con + 1
+
     return matrix_numbers
 
 
-# Dont know yet
 def create_probabilities(matrix):
     result_matrix = np.zeros((9, 9), dtype=object)
     matrix_numbers = all_number_position(matrix)
-    line = 0
-    while line <= 8:
-        column = 0
-        while column <= 8:
+
+    for line in range(0, 9):
+        for column in range(0, 9):
             if matrix[line][column] == 0:
-                con = 0
                 array_prob = []
-                while con <= 8:
+                for con in range(0, 9):
                     if matrix_numbers[con][line][column] > 0:
                         array_prob.append(matrix_numbers[con][line][column])
-                    con = con + 1
                 result_matrix[line][column] = array_prob
             else:
                 result_matrix[line][column] = matrix[line][column]
-            column = column + 1
-        line = line + 1
+
     return result_matrix
 
 
-def verify_hidden_line_number(matrix, matrix_prob):
-    line = 0
-    execute_again = 0
-    while line <= 8:
-        new_line = verify_hidden_number(copy.deepcopy(matrix[line]), matrix_prob[line])
+def insert_hidden_number(matrix, matrix_prob):
+    execute_again = False
+    for line in range(0, 9):
+        new_line = verify_hidden_number(matrix[line], matrix_prob[line])
         if np.any(new_line != matrix[line]):
-            execute_again = 1
+            execute_again = True
             matrix[line] = new_line
-        line = line + 1
-    if execute_again == 1:
+    if execute_again:
         matrix = execute_probabilities(copy.deepcopy(matrix))
     return matrix
 
 
-def verify_hidden_column_number(matrix, matrix_prob):
-    column = 0
-    execute_again = 0
-
-    while column <= 8:
-        column_matrix = return_column(matrix, column)
-        column_prob = return_column(matrix_prob, column)
-        new_column = verify_hidden_number(copy.deepcopy(column_matrix), column_prob)
-        if np.any(new_column != column_matrix):
-            line = 0
-            execute_again = 1
-            while line <= 8:
-                matrix[line][column] = new_column[line]
-                line = line + 1
-        column = column + 1
-    if execute_again == 1:
-        matrix = execute_probabilities(copy.deepcopy(matrix))
-    return matrix
+def insert_hidden_number_column(matrix, matrix_prob):
+    return insert_hidden_number(matrix.transpose(), matrix_prob.transpose()).transpose()
 
 
-def verify_hidden_area_number(matrix, matrix_prob):
-    area = 0
-    execute_again = 0
-    while area <= 8:
+def insert_hidden_number_area(matrix, matrix_prob):
+    # It could also be done using the insert_hidden_number function
+    # but the transformation process increase a lot in the processing time
+    execute_again = False
+    for area in range(0, 9):
         area_matrix = return_area(matrix, area)
         area_prob = return_area(matrix_prob, area)
         new_area = verify_hidden_number(copy.deepcopy(area_matrix), area_prob)
         if np.any(new_area != area_matrix):
-            execute_again = 1
-            lines_columns = return_line_column_area(area)
-            matrix[lines_columns[0]][lines_columns[3]] = new_area[0]
-            matrix[lines_columns[0]][lines_columns[4]] = new_area[1]
-            matrix[lines_columns[0]][lines_columns[5]] = new_area[2]
-            matrix[lines_columns[1]][lines_columns[3]] = new_area[3]
-            matrix[lines_columns[1]][lines_columns[4]] = new_area[4]
-            matrix[lines_columns[1]][lines_columns[5]] = new_area[5]
-            matrix[lines_columns[2]][lines_columns[3]] = new_area[6]
-            matrix[lines_columns[2]][lines_columns[4]] = new_area[7]
-            matrix[lines_columns[2]][lines_columns[5]] = new_area[8]
-        area = area + 1
-    if execute_again == 1:
+            area_keys = AREA_KEYS.get(area)
+            matrix[area_keys[0]:area_keys[1], area_keys[2]:area_keys[3]] = new_area.reshape(3, 3)
+            execute_again = True
+
+    if execute_again:
         matrix = execute_probabilities(copy.deepcopy(matrix))
     return matrix
 
 
 def verify_hidden_number(area, area_prob):
-    column = 0
     amount_number = np.zeros(9, dtype=int)
-
-    while column <= 8:
+    for column in range(0, 9):
         if area[column] == 0:
-            counter = 0
-            while counter < len(area_prob[column]):
-                amount_number[area_prob[column][counter] - 1] = amount_number[area_prob[column][counter] - 1] + 1
-                counter = counter + 1
-        column = column + 1
-    c = 0
-    while c <= 8:
-        if amount_number[c] == 1:
-            col_add = 0
-            while col_add <= 8:
+            for prob_value in area_prob[column]:
+                amount_number[prob_value - 1] += 1
+
+    for value_amount in range(0, 9):
+        if amount_number[value_amount] == 1:
+            for col_add in range(0, 9):
                 if area[col_add] == 0:
-                    con_add = 0
-                    while con_add < len(area_prob[col_add]):
-                        if area_prob[col_add][con_add] == c + 1:
-                            area[col_add] = c + 1
-                        con_add = con_add + 1
-                col_add = col_add + 1
-        c = c + 1
+                    for prob_value in area_prob[col_add]:
+                        if prob_value == value_amount + 1:
+                            area[col_add] = value_amount + 1
+
     return area
 
 
@@ -296,78 +195,68 @@ def is_valid_sudoku(matrix):
 
 
 def execute_multiple_probabilities(matrix, matrix_prob):
-    line = 0
     probabilities = []
     result = np.zeros((9, 9), dtype=int)
-    while line <= 8:
-        column = 0
-        while column <= 8:
-            conLen = 0
+
+    for line in range(0, 9):
+        for column in range(0, 9):
             if matrix[line][column] == 0:
-                while conLen < len(matrix_prob[line][column]):
-                    con_resul = copy.deepcopy(matrix)
-                    con_resul[line][column] = matrix_prob[line][column][conLen]
-                    if is_valid_sudoku(con_resul):
-                        con_resul = execute_probabilities(con_resul)
-                        if is_valid_sudoku(con_resul):
-                            if total_empty(con_resul) == 0:
-                                return con_resul
+                for con_len in range(0, len(matrix_prob[line][column])):
+                    con_result = copy.deepcopy(matrix)
+                    con_result[line][column] = matrix_prob[line][column][con_len]
+                    if is_valid_sudoku(con_result):
+                        con_result = execute_probabilities(con_result)
+                        if is_valid_sudoku(con_result):
+                            if total_empty(con_result) == 0:
+                                return con_result
                             else:
-                                probabilities.append(con_resul)
-                    conLen = conLen + 1
-            column = column + 1
-        line = line + 1
-    c = 0
-    con_empty = 81
-    while c < len(probabilities):
-        if is_valid_sudoku(probabilities[c]):
-            if total_empty(probabilities[c]) < con_empty:
-                result = probabilities[c]
-        c = c + 1
+                                probabilities.append(con_result)
+
+    for prob in probabilities:
+        if is_valid_sudoku(prob):
+            if total_empty(prob) < 81:
+                result = prob
+
     return result
 
 
 # Main execute process
 def execute_probabilities(matrix):
     matrix_prob = create_probabilities(matrix)
-    line = 0
-    execute_again = 0
-    exist_one = 0
+    execute_again = False
     matrix_result = copy.deepcopy(matrix)
     empty = np.zeros((9, 9), dtype=int)
-    while line <= 8:
-        column = 0
-        while column <= 8:
+    for line in range(0, 9):
+        for column in range(0, 9):
             if matrix[line][column] == 0 and len(matrix_prob[line][column]) == 1:
                 matrix_result[line][column] = matrix_prob[line][column][0]
-                execute_again = 1
-                exist_one = 1
-            column = column + 1
-        line = line + 1
-    if execute_again == 1 and np.any(empty != matrix_result) and total_empty(matrix_result) > 0:
+                execute_again = True
+
+    if execute_again is True and np.any(empty != matrix_result) and total_empty(matrix_result) > 0:
         control_matrix = execute_probabilities(copy.deepcopy(matrix_result))
         if is_valid_sudoku(control_matrix):
             matrix_result = control_matrix
-    if exist_one == 0 and np.any(empty != matrix_result) and total_empty(matrix_result) > 0:
+    elif execute_again is False and np.any(empty != matrix_result) and total_empty(matrix_result) > 0:
         matrix_prob = create_probabilities(matrix_result)
-        control_matrix = verify_hidden_line_number(matrix_result, matrix_prob)
+        control_matrix = insert_hidden_number(matrix_result, matrix_prob)
         if is_valid_sudoku(control_matrix):
             matrix_result = control_matrix
+
     if total_empty(matrix_result) > 0 and np.any(empty != matrix_result):
         matrix_prob = create_probabilities(matrix_result)
-        control_matrix = verify_hidden_column_number(matrix_result, matrix_prob)
+        control_matrix = insert_hidden_number_column(matrix_result, matrix_prob)
         if is_valid_sudoku(control_matrix):
             matrix_result = control_matrix
-    if total_empty(matrix_result) > 0 and np.any(empty != matrix_result):
-        matrix_prob = create_probabilities(matrix_result)
-        control_matrix = verify_hidden_area_number(matrix_result, matrix_prob)
-        if is_valid_sudoku(control_matrix):
-            matrix_result = control_matrix
-    if total_empty(matrix_result) > 0 and np.any(empty != matrix_result):
-        matrix_prob = create_probabilities(matrix_result)
-        control_matrix = execute_multiple_probabilities(copy.deepcopy(matrix_result), matrix_prob)
-        if np.any(control_matrix != matrix_result) and np.any(empty != control_matrix):
-            matrix_result = control_matrix
-            if total_empty(matrix_result) > 0:
-                matrix_result = execute_probabilities(matrix_result)
+        if total_empty(matrix_result) > 0 and np.any(empty != matrix_result):
+            matrix_prob = create_probabilities(matrix_result)
+            control_matrix = insert_hidden_number_area(matrix_result, matrix_prob)
+            if is_valid_sudoku(control_matrix):
+                matrix_result = control_matrix
+                if total_empty(matrix_result) > 0 and np.any(empty != matrix_result):
+                    matrix_prob = create_probabilities(matrix_result)
+                    control_matrix = execute_multiple_probabilities(copy.deepcopy(matrix_result), matrix_prob)
+                    if np.any(control_matrix != matrix_result) and np.any(empty != control_matrix):
+                        matrix_result = control_matrix
+                        if total_empty(matrix_result) > 0:
+                            matrix_result = execute_probabilities(matrix_result)
     return matrix_result
