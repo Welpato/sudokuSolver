@@ -1,7 +1,7 @@
 import getopt
 import sys
 import numpy as np
-import sudokuSolver
+import sudoku_solver
 
 
 def main(argv):
@@ -22,10 +22,10 @@ def main(argv):
     print('-- SUDOKU --')
     print(matrix)
     print('-- RESULT --')
-    result = sudokuSolver.execute_probabilities(matrix)
+    result = sudoku_solver.execute_probabilities(matrix)
     print(result)
-    print('TOTAL EMPTY: ', sudokuSolver.total_empty(result))
-    print('IS VALID: ', sudokuSolver.is_valid_sudoku(result))
+    print('TOTAL EMPTY: ', sudoku_solver.total_empty(result))
+    print('IS VALID: ', sudoku_solver.is_valid_sudoku(result))
 
 
 if __name__ == "__main__":
