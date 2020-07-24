@@ -2,8 +2,6 @@
 import numpy as np
 import copy
 
-import sys
-
 AREA_KEYS = {
     0: [0, 3, 0, 3],
     1: [0, 3, 3, 6],
